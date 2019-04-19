@@ -1,0 +1,152 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 10.04.2019 18:27:09
+// Design Name: 
+// Module Name: CORDICarc
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module CORDICarc(clock, arcsine, x_start, y_start,z0,t0);
+
+  parameter width = 20;
+
+  // Inputs
+  input clock;
+  input signed [width-1:0] x_start,y_start,t0; 
+  input signed [31:0] z0;
+  //input signed [31:0] angle;
+  
+  // Outputs
+  output signed  [31:0] arcsine;
+  //output signed  [width-1:0] yn;
+
+  // Generate table of atan values
+  wire signed [31:0] atan_table [0:30];
+                          
+//  assign atan_table[00] = 'b0010000000000000; // 45.000 degrees -> atan(2^0)
+//  assign atan_table[01] = 'b0001001011100100; // 26.565 degrees -> atan(2^-1)
+//  assign atan_table[02] = 'b0000100111111011; // 14.036 degrees -> atan(2^-2)
+//  assign atan_table[03] = 'b0000010100010001; // atan(2^-3)
+//  assign atan_table[04] = 'b0000001010001011;
+//  assign atan_table[05] = 'b0000000101000101;
+//  assign atan_table[06] = 'b0000000010100010;
+//  assign atan_table[07] = 'b0000000001010001;
+//  assign atan_table[08] = 'b0000000000101000;
+//  assign atan_table[09] = 'b0000000000010100;
+//  assign atan_table[10] = 'b0000000000001010;
+//  assign atan_table[11] = 'b0000000000000101;
+//  assign atan_table[12] = 'b0000000000000010;
+//  assign atan_table[13] = 'b0000000000000001;
+//  assign atan_table[14] = 'b0000000000000000;
+//  assign atan_table[15] = 'b0000000000000000;
+ 
+
+
+ assign atan_table[00] = 'b00100000000000000000000000000000; // 45.000 degrees -> atan(2^0)
+  assign atan_table[01] = 'b00010010111001000000010100011101; // 26.565 degrees -> atan(2^-1)
+  assign atan_table[02] = 'b00001001111110110011100001011011; // 14.036 degrees -> atan(2^-2)
+  assign atan_table[03] = 'b00000101000100010001000111010100; // atan(2^-3)
+  assign atan_table[04] = 'b00000010100010110000110101000011;
+  assign atan_table[05] = 'b00000001010001011101011111100001;
+  assign atan_table[06] = 'b00000000101000101111011000011110;
+  assign atan_table[07] = 'b00000000010100010111110001010101;
+  assign atan_table[08] = 'b00000000001010001011111001010011;
+  assign atan_table[09] = 'b00000000000101000101111100101110;
+  assign atan_table[10] = 'b00000000000010100010111110011000;
+  assign atan_table[11] = 'b00000000000001010001011111001100;
+  assign atan_table[12] = 'b00000000000000101000101111100110;
+  assign atan_table[13] = 'b00000000000000010100010111110011;
+  assign atan_table[14] = 'b00000000000000001010001011111001;
+  assign atan_table[15] = 'b00000000000000000101000101111100;
+  assign atan_table[16] = 'b00000000000000000010100010111110;
+  assign atan_table[17] = 'b00000000000000000001010001011111;
+  assign atan_table[18] = 'b00000000000000000000101000101111;
+  assign atan_table[19] = 'b00000000000000000000010100010111;
+  assign atan_table[20] = 'b00000000000000000000001010001011;
+  assign atan_table[21] = 'b00000000000000000000000101000101;
+  assign atan_table[22] = 'b00000000000000000000000010100010;
+  assign atan_table[23] = 'b00000000000000000000000001010001;
+  assign atan_table[24] = 'b00000000000000000000000000101000;
+  assign atan_table[25] = 'b00000000000000000000000000010100;
+  assign atan_table[26] = 'b00000000000000000000000000001010;
+  assign atan_table[27] = 'b00000000000000000000000000000101;
+  assign atan_table[28] = 'b00000000000000000000000000000010;
+  assign atan_table[29] = 'b00000000000000000000000000000001;
+  assign atan_table[30] = 'b00000000000000000000000000000000;
+
+
+  reg signed [width-1:0] x [0:width-1];
+  reg signed [width-1:0] y [0:width-1];
+  reg signed [31:0] z [0:width-1];
+  reg signed [width-1:0] t [0:width-1];
+  reg rst=0;
+ // reg flag=0;
+always@(posedge clock)
+begin
+t[0]<=t0;
+ //rst<=1;
+ x[0]<=x_start;
+ y[0]<=y_start;
+ z[0]<=z0;
+end
+
+ 
+  genvar i;
+
+  generate
+  for (i=0; i < (width); i=i+1)
+  begin: xyz
+   
+    wire signed [width-1:0] x_shr, y_shr;
+
+    assign x_shr = x[i] >>> i; // signed shift right
+    assign y_shr = y[i] >>> i;
+
+ 
+wire signed [width-1:0] yrep,xrep,trep,t_i;
+wire w,e;
+wire signed [width-1:0]d;
+assign yrep=y[i];
+assign trep=t[0];
+//assign xrep=x[i];
+assign w=(yrep<=trep);
+//assign e=(xrep>0);
+//assign d[i]=w?(e?1:0):(e?0:1);
+assign d[i]=w?1:0;
+assign t_i = t[i] >>> 2*i;
+    always @(posedge clock)
+    begin
+     
+      // add/subtract shifted data
+      x[i+1] <= d[i] ? x[i] - y_shr: x[i] + y_shr  ;
+      y[i+1] <= d[i] ? y[i] + x_shr: y[i] - x_shr  ;
+      z[i+1] <= d[i] ? z[i] - atan_table[i] : z[i] + atan_table[i]  ;
+      t[i+1] <= t[i] +t_i;
+      //flag<=1;
+    end
+  end
+  endgenerate
+
+  // assign output
+  assign arcsine = z[width-1];
+ // assign arccos = 'b00100000000000000-(z[width-1]/(2^16))*360;
+ // assign yn=y[width-1];
+
+endmodule
+
+
+
